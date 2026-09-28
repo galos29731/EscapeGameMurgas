@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Game - Spoznaj Murgaša</title>
+    <style>
+        :root {
+            --bg-dark: #0a192f;
+            --bg-card: #172a45;
+            --primary-blue: #3066be;
+            --light-blue: #00b4d8;
+            --gold: #f5b041;
+            --gold-hover: #f39c12;
+            --text-white: #f8f9fa;
+            --text-muted: #a8b2d1;
+            --red-wrong: #e74c3c;
+            --red-wrong-border: #c0392b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(245, 176, 65, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            color: var(--light-blue);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--light-blue), var(--gold));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+            border: none;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--light-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-gold {
+            background-color: var(--gold);
+            color: #000;
+        }
+
+        .btn-gold:hover:not(:disabled) {
+            background-color: var(--gold-hover);
+        }
+
+        .station-btn {
+            background-color: rgba(255,255,255,0.05);
+            border: 2px solid var(--primary-blue);
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        .station-btn.completed {
+            border-color: #2ecc71;
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .option-btn {
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: left;
+            padding: 14px;
+            font-size: 15px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: rgba(255,255,255,0.15);
+            border-color: var(--light-blue);
+        }
+
+        .option-btn.wrong {
+            background-color: var(--red-wrong) !important;
+            border-color: var(--red-wrong-border) !important;
+            color: #fff !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid var(--primary-blue);
+            background: var(--bg-dark);
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .success-box {
+            background: rgba(46, 204, 113, 0.1);
+            border: 2px solid #2ecc71;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .letter-display {
+            font-size: 42px;
+            font-weight: bold;
+            color: var(--gold);
+            letter-spacing: 5px;
+            margin: 15px 0;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 6px;
+            display: inline-block;
+            width: 80px;
+        }
+
+        .footer-text {
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HLAVNÉ MENU -->
+        <div id="menu-screen">
+            <h1>ESCAPE GAME</h1>
+            <h2>Jozefa Murgaša</h2>
+            <p style="margin-bottom: 20px; color: var(--text-muted);">Vyber si tému, zvládni otázky a získaj indíciu do finálneho hesla!</p>
+            
+            <div class="station-grid" id="station-list">
+                <!-- Miestnosti -->
+            </div>
+            
+            <div id="final-unlock-zone" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button class="btn-gold" onclick="showFinalScreen()">🔒 ODOMKNÚŤ FINÁLNY TREZOR</button>
+            </div>
+        </div>
+
+        <!-- OBRAZOVKA KVÍZU -->
+        <div id="quiz-screen" class="hidden">
+            <h1 id="quiz-title">Stanovisko</h1>
+            <div class="progress-bar"><div class="progress" id="quiz-progress"></div></div>
+            <h3 id="question-text" style="margin-bottom: 20px; font-size: 18px; text-align: left;">Otázka...</h3>
+            <div class="options-container" id="options-list">
+                <!-- Odpovede -->
+            </div>
+        </div>
+
+        <!-- OBRAZOVKA ÚSPECHU -->
+        <div id="success-screen" class="hidden">
+            <h1>Sekcia dokončená!</h1>
+            <div class="success-box">
+                <p>Výborne! Správne si odpovedal na všetky otázky.</p>
+                <p style="margin-top: 10px;">Tvoje písmeno do záverečnej tajničky je:</p>
+                <div class="letter-display" id="generated-letter">X</div>
+                <p style="color: var(--text-muted); font-size: 14px;">Zapíš si ho a vyrieš ostatné kategórie.</p>
+            </div>
+            <button onclick="backToMenu()">Späť na výber tém</button>
+        </div>
+
+        <!-- FINÁLNA OBRAZOVKA -->
+        <div id="final-screen" class="hidden">
+            <h1>Finálny Trezor</h1>
+            <p style="margin: 25px 0; color: var(--text-muted);">Ak máš všetkých 6 písmen a zložil si tajné slovo, zadaj ho sem:</p>
+            <input type="text" id="final-password" placeholder="ZADAJ HESLO (BEZ DIAKRITIKY)" style="text-transform: uppercase;">
+            <button class="btn-gold" onclick="checkFinalPassword()" style="margin-bottom: 10px;">OTVORIŤ TRUHLICU</button>
+            <button onclick="backToMenu()" style="background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);">Späť</button>
+        </div>
+
+        <!-- VÝHRA (UPRAVENÁ PRE DEVIATAKOV) -->
+        <div id="victory-screen" class="hidden">
+            <h1 style="color: #2ecc71;">🎉 GRATULUJEME! 🎉</h1>
+            <h2>Hra úspešne vyriešená!</h2>
+            <div style="font-size: 80px; margin: 20px 0;">🎁 🎮 🏆</div>
+            <p style="font-size: 18px; margin-bottom: 20px; font-weight: bold; color: var(--gold);">Od Murgašákov dostávaš odmenu!</p>
+            <p style="font-size: 15px; margin-bottom: 25px; line-height: 1.5; color: var(--text-white);">Ukáž tento displej našim chalanom a babám priamo tu v triede a vyzdvihni si svoj darček.</p>
+            <button onclick="restartGame()">Hrať znova</button>
+        </div>
+
+        <div class="footer-text">Jozefa Murgaša © 2026</div>
+    </div>
+
+    <script>
+        const gameData = {
+            prog: {
+                name: "Programovanie", letter: "M",
+                questions: [
+                    { q: "1. Ktorý z týchto jazykov je skutočný programovací jazyk?", a: ["Python", "Cobra", "Viper", "Anaconda"], correct: "Python" },
+                    { q: "2. Čo robí programátor?", a: ["Navrhuje počítačové networks", "Píše a vytvára programy", "Opravuje hardvér počítačov", "Navrhuje logá"], correct: "Píše a vytvára programy" },
+                    { q: "3. Čo je algoritmus?", a: ["Postup riešenia problému", "Počítačový vírus", "Druh monitora", "Programovací jazyk"], correct: "Postup riešenia problému" },
+                    { q: "4. Čo znamená „bug“ v programe?", a: ["Nová funkcia", "Chyba v programe", "Aktualizácia", "Záloha programu"], correct: "Chyba v programe" },
+                    { q: "5. Ktorý z týchto jazykov by si skôr stretol v zoologickej záhrade?", a: ["Python", "Java", "C#", "Pascal"], correct: "Python" },
+                    { q: "6. Koľko monitorov podľa internetových mémov potrebuje programátor?", a: ["1", "2", "3", "Stále o jeden viac"], correct: "Stále o jeden viac" }
+                ]
+            },
+            siete: {
+                name: "Počítačové siete", letter: "U",
+                questions: [
+                    { q: "1. Aké zariadenie najčastejšie rozdeľuje internet v domácnosti?", a: ["Router", "Switch", "Server", "Access Point"], correct: "Router" },
+                    { q: "2. Čo je IP adresa?", a: ["Adresa zariadenia v sieti", "Heslo k Wi-Fi", "Názov používateľa", "Typ kábla"], correct: "Adresa zariadenia v sieti" },
+                    { q: "3. Ktorý kábel sa často používa v počítačových sieťach?", a: ["Ethernet (UTP) kábel", "HDMI kábel", "USB kábel", "VGA kábel"], correct: "Ethernet (UTP) kábel" },
+                    { q: "4. Čo znamená Wi-Fi?", a: ["Bezdrôtové pripojenie k sieti", "Druh antivírusu", "Programovací jazyk", "Sieťový konektor"], correct: "Bezdrôtové pripojenie k sieti" },
+                    { q: "5. Ktoré heslo by správca siete určite neodporučil?", a: ["Murgas2026!", "heslo123", "SPŠJM_BB", "Router#01"], correct: "heslo123" },
+                    { q: "6. Ak nejde internet, čo skúsi väčšina ľudí ako prvé?", a: ["Reštartovať router", "Kúpiť nový počítač", "Zavolať starostovi", "Vymaľovať izbu"], correct: "Reštartovať router" }
+                ]
+            },
+            dizajn: {
+                name: "Dizajn digitálnych médií", letter: "R",
+                questions: [
+                    { q: "1. Čo je hlavnou úlohou grafického dizajnéra?", a: ["Tvoriť vizuálny obsah", "Programovať databázy", "Opravovať servery", "Konfigurovať siete"], correct: "Tvoriť vizuálny obsah" },
+                    { q: "2. Čo je logo?", a: ["Grafický symbol firmy alebo značky", "Typ fotografie", "Formát videa", "Druh písma"], correct: "Grafický symbol firmy alebo značky" },
+                    { q: "3. Čo znamená RGB?", a: ["Farebný model používaný na obrazovkách", "Typ monitora", "Grafický program", "Formát obrázka"], correct: "Farebný model používaný na obrazovkách" },
+                    { q: "4. Na čo sa používa grafický tablet?", a: ["Kreslenie a tvorbu grafiky", "Pripojenie do siete", "Programovanie", "Tlač dokumentov"], correct: "Kreslenie a tvorbu grafiky" },
+                    { q: "5. Čo býva najčastejšia pripomienka klienta?", a: ["„Je to perfektné.“", "„Môže byť logo ešte väčšie?“", "„Nič nemeň.“", "„Je to príliš dobré.“"], correct: "„Môže byť logo ešte väčšie?“" },
+                    { q: "6. Ktorú farbu si ľudia najčastejšie všimnú pri chybe?", a: ["Modrú", "Zelenú", "Červenú", "Sivú"], correct: "Červenú" }
+                ]
+            },
+            robotika: {
+                name: "Robotika", letter: "G",
+                questions: [
+                    { q: "1. Čo je robot?", a: ["Automatizované zariadenie vykonávajúce úlohy", "Výkonný počítač", "Programovací jazyk", "Typ senzora"], correct: "Automatizované zariadenie vykonávajúce úlohy" },
+                    { q: "2. Na čo slúži senzor?", a: ["Získava informácie z okolia", "Nabíja batériu", "Ukladá program", "Zobrazuje obraz"], correct: "Získava informácie z okolia" },
+                    { q: "3. Čo riadi činnosť robota?", a: ["Program", "Reproduktor", "Monitor", "Klávesnica"], correct: "Program" },
+                    { q: "4. Kde sa roboty často používajú?", a: ["Vo výrobe a priemysle", "V knižniciach na čítanie kníh", "Na športových zápasoch ako rozhodcovia", "Na maľovanie mrakov"], correct: "Vo výrobe a priemysle" },
+                    { q: "5. Ktorého robota pozná skoro každý?", a: ["R2-D2", "Router-3000", "ServerBot", "Ethernetman"], correct: "R2-D2" },
+                    { q: "6. Čo by robot pravdepodobne nezvládol bez programu?", a: ["Vedieť, čo má robiť", "Svietiť LEDkou", "Nabíjať sa", "Mať batériu"], correct: "Vedieť, čo má robiť" }
+                ]
+            },
+            murgas: {
+                name: "Jozef Murgaš", letter: "A",
+                questions: [
+                    { q: "1. Kým bol Jozef Murgaš?", a: ["Kňaz a vynálezca", "Programátor", "Astronaut", "Architekt"], correct: "Kňaz a vynálezca" },
+                    { q: "2. V ktorej oblasti sa preslávil?", a: ["Bezdrôtová komunikácia", "Výroba počítačov", "Stavba mostov", "Fotografovanie"], correct: "Bezdrôtová komunikácia" },
+                    { q: "3. Po kom je pomenovaná vaša škola?", a: ["Po Jozefovi Murgašovi", "Po Aurelovi Stodolovi", "Po M. R. Štefánikovi", "Po Ľudovítovi Štúrovi"], correct: "Po Jozefovi Murgašovi" },
+                    { q: "4. Čo bolo cieľom Murgašových pokusov?", a: ["Prenos správ na diaľku bez drôtov", "Vývoj automobilov", "Tvorba počítačových hier", "Výroba televízorov"], correct: "Prenos správ na diaľku bez drôtov" },
+                    { q: "5. Keby mal Murgaš dnes smartfón, čo by ho asi najviac zaujímalo?", a: ["Bezdrôtové siete", "Tanečné videá", "Počasie", "Kalkulačka"], correct: "Bezdrôtové siete" },
+                    { q: "6. Ktoré slovo sa najviac spája s Jozefom Murgašom?", a: ["Rádio", "Diesel", "Lokomotíva", "Semafor"], correct: "Rádio" }
+                ]
+            },
+            hry: {
+                name: "Počítačové hry a VR", letter: "Š",
+                questions: [
+                    { q: "1. Čo znamená skratka VR?", a: ["Virtual Reality (virtuálna realita)", "Video Rendering", "Virtual Router", "Visual Racing"], correct: "Virtual Reality (virtuálna realita)" },
+                    { q: "2. Na čo slúži VR headset?", a: ["Na ponorenie hráča do virtuálneho prostredia", "Na zrýchlenie internetu", "Na programovanie webstránok", "Na ovládanie robotov"], correct: "Na ponorenie hráča do virtuálneho prostredia" },
+                    { q: "3. Ktoré zariadenie sa často používa pri simulátoroch jazdenia?", a: ["Volant a pedále", "Tlačiareň", "Scanner", "Projektor"], correct: "Volant a pedále" },
+                    { q: "4. Čo je simulátor?", a: ["Program, ktorý napodobňuje skutočnú činnosť alebo prostredie", "Program na úpravu fotografií", "Počítačový vírus", "Typ operačného systému"], correct: "Program, ktorý napodobňuje skutočnú činnosť alebo prostredie" },
+                    { q: "5. Čo väčšina hráčov povie po prehre?", a: ["„Bol som slabší.“", "„Súper bol lepší.“", "„Lagovalo mi to.“", "„Zabudol som hrať.“"], correct: "„Lagovalo mi to.“" },
+                    { q: "6. Čo je pri závodnom simulátore najdôležitejšie?", a: ["Rýchle reflexy", "Sústredenie", "Tréning", "Presvedčenie, že každá chyba je chyba auta"], correct: "Presvedčenie, že každá chyba je chyba auta" }
+                ]
+            }
+        };
+
+        let completedStations = JSON.parse(localStorage.getItem('completedStations')) || [];
+        let currentStation = null;
+        let currentQuestionIdx = 0;
+        let currentShuffledOptions = [];
+
+        function renderMenu() {
+            const grid = document.getElementById('station-list');
+            grid.innerHTML = '';
+            
+            Object.keys(gameData).forEach(key => {
+                const station = gameData[key];
+                const isDone = completedStations.includes(key);
+                const btn = document.createElement('button');
+                btn.className = `station-btn ${isDone ? 'completed' : ''}`;
+                btn.innerHTML = `${isDone ? '✅' : '🎮'} ${station.name}`;
+                btn.onclick = () => selectStation(key);
+                grid.appendChild(btn);
+            });
+        }
+
+        // UPRAVENÉ: Rovno skočí na otázky bez zadávania PINu
+        function selectStation(id) {
+            currentStation = id;
+            if (completedStations.includes(id)) {
+                alert("Túto tému už máš hotovú. Tvoje získané písmeno je: " + gameData[id].letter);
+                return;
+            }
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            currentQuestionIdx = 0;
+            showQuestion();
+        }
+
+        function shuffleArray(array) {
+            let shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function showQuestion() {
+            const data = gameData[currentStation];
+            const q = data.questions[currentQuestionIdx];
+            
+            document.getElementById('quiz-title').innerText = data.name;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const percent = (currentQuestionIdx / data.questions.length) * 100;
+            document.getElementById('quiz-progress').style.width = `${percent}%`;
+
+            currentShuffledOptions = shuffleArray(q.a);
+
+            const prefixes = ["A) ", "B) ", "C) ", "D) "];
+            const optionsDiv = document.getElementById('options-list');
+            optionsDiv.innerHTML = '';
+
+            currentShuffledOptions.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = prefixes[index] + option;
+                // Posielame text aj samotné tlačidlo na spracovanie kliku
+                btn.onclick = () => checkAnswer(option, btn);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        // UPRAVENÉ: Namiesto alertu zafarbí nesprávne políčko
+        function checkAnswer(selectedText, clickedBtn) {
+            const data = gameData[currentStation];
+            const correctText = data.questions[currentQuestionIdx].correct;
+
+            if (selectedText === correctText) {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < data.questions.length) {
+                    showQuestion();
+                } else {
+                    finishStation();
+                }
+            } else {
+                // Políčko očervenie, pridá sa krížik a zablokuje sa pre zamedzenie spamu
+                clickedBtn.classList.add('wrong');
+                clickedBtn.innerHTML = "❌ " + selectedText;
+                clickedBtn.disabled = true;
+            }
+        }
+
+        function finishStation() {
+            if (!completedStations.includes(currentStation)) {
+                completedStations.push(currentStation);
+                localStorage.setItem('completedStations', JSON.stringify(completedStations));
+            }
+            
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('success-screen').classList.remove('hidden');
+            document.getElementById('generated-letter').innerText = gameData[currentStation].letter;
+        }
+
+        function backToMenu() {
+            document.getElementById('success-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            renderMenu();
+        }
+
+        function showFinalScreen() {
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.remove('hidden');
+            document.getElementById('final-password').value = '';
+        }
+
+        function checkFinalPassword() {
+            const input = document.getElementById('final-password').value.trim().toUpperCase();
+            if (input === "MURGAS") {
+                document.getElementById('final-screen').classList.add('hidden');
+                document.getElementById('victory-screen').classList.remove('hidden');
+                localStorage.clear();
+            } else {
+                alert("❌ Nesprávne heslo! Poskladaj ho zo 6 písmen z jednotlivých tém.");
+            }
+        }
+
+        function restartGame() {
+            completedStations = [];
+            localStorage.clear();
+            document.getElementById('victory-screen').classList.add('hidden');
+            backToMenu();
+        }
+
+        renderMenu();
+    </script>
+</body>
+</html>
